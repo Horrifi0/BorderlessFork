@@ -35,22 +35,17 @@ public abstract class WindowMixin implements WindowHooks {
 	@Final
 	private long handle;
 
-	@Shadow
-	private boolean videoModeDirty;
 
-	@Shadow
-	@Final
+	@Shadow @Final
 	private MonitorTracker monitorTracker;
 
-	@Shadow public abstract void applyVideoMode();
+	@Shadow public abstract void updateWindowRegion();
+
+	
 
 	// Determines if the window *was* in borderless fullscreen (hence the windowed coordinates should not be trusted)
 	private boolean borderlessmining_wasEnabled = false;
 	private int borderlessmining_oldWindowedX = 0;
-	private int borderlessmining_oldWindowedY = 0;
-	private int borderlessmining_oldWindowedWidth = 0;
-	private int borderlessmining_oldWindowedHeight = 0;
-
 	// Update the window to use borderless fullscreen, when the video/fullscreen mode is changed
 	@Inject(method = "updateWindowRegion", at = @At("HEAD"), cancellable = true)
 	private void beforeUpdateWindowRegion(CallbackInfo ci) {
@@ -90,23 +85,8 @@ public abstract class WindowMixin implements WindowHooks {
 		// The rest of this function will reset the windowed coordinates; if going borderless -> fullscreen, need to
 		// make sure the old windowed coordinates are preserved
 		borderlessmining_oldWindowedX = windowedX;
-		borderlessmining_oldWindowedY = windowedY;
-		borderlessmining_oldWindowedWidth = windowedWidth;
-		borderlessmining_oldWindowedHeight = windowedHeight;
 	}
 
-	@Inject(method = "updateWindowRegion", at = @At("RETURN"))
-	private void afterUpdateWindowRegion(CallbackInfo ci) {
-		if (borderlessmining_wasEnabled) {
-			borderlessmining_wasEnabled = false;
-
-			// See above (preserves old windowed coordinates; ignores those from borderless)
-			windowedX = borderlessmining_oldWindowedX;
-			windowedY = borderlessmining_oldWindowedY;
-			windowedWidth = borderlessmining_oldWindowedWidth;
-			windowedHeight = borderlessmining_oldWindowedHeight;
-		}
-	}
 
 	// Pretend to the constructor code (that creates the window) that it is not fullscreen
 	@Redirect(method = "<init>",
@@ -128,14 +108,13 @@ public abstract class WindowMixin implements WindowHooks {
 	}
 
 	// Save config and update video mode if video mode is applied
-	@Inject(method = "applyVideoMode", at = @At("HEAD"))
-	private void onApplyVideoMode(CallbackInfo info) {
-		ConfigHandler.getInstance().saveIfDirty();
-	}
 
 	@Override
 	public void borderlessmining_apply() {
-		videoModeDirty = true;
-		applyVideoMode();
+		// videoModeDirty = true; removed in 1.21.8
+		// applyVideoMode(); removed in 1.21.8
+		// Instead, call updateWindowRegion() to apply changes
+		ConfigHandler.getInstance().saveIfDirty();
+		updateWindowRegion();
 	}
 }

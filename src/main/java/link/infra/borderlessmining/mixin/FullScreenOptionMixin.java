@@ -1,54 +1,55 @@
 package link.infra.borderlessmining.mixin;
 
+import net.minecraft.client.*;
 import link.infra.borderlessmining.config.ConfigHandler;
 import net.minecraft.client.gui.screen.option.VideoOptionsScreen;
 import net.minecraft.client.option.SimpleOption;
-import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyArgs;
-import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Consumer;
 
 @Mixin(VideoOptionsScreen.class)
 public abstract class FullScreenOptionMixin {
-	// Modify the constructor call to add an extra option for Borderless Fullscreen
-	@ModifyArgs(method = "init",
-		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/SimpleOption;<init>(Ljava/lang/String;Lnet/minecraft/client/option/SimpleOption$TooltipFactory;Lnet/minecraft/client/option/SimpleOption$ValueTextGetter;Lnet/minecraft/client/option/SimpleOption$Callbacks;Ljava/lang/Object;Ljava/util/function/Consumer;)V"))
-	private void modifyOption(Args args) {
+	@Shadow
+	private SimpleOption<Boolean> fullscreen;
+
+	@Shadow
+	private int width;
+
+	@Shadow
+	private int height;
+
+	@Shadow
+	private net.minecraft.client.MinecraftClient client;
+
+	@Shadow
+	protected abstract void addDrawableChild(net.minecraft.client.gui.Element element);
+
+	// Add borderless fullscreen option to the video settings if enabled
+	@Inject(method = "init", at = @At("TAIL"))
+	private void addBorderlessFullscreenOption(CallbackInfo ci) {
 		if (!ConfigHandler.getInstance().addToVanillaVideoSettings) {
 			return;
 		}
 
-		// Add one extra option at the end for Borderless Windowed
-		SimpleOption.ValidatingIntSliderCallbacks cb = args.get(3);
-		int bmOption = cb.maxInclusive() + 1;
-		args.set(3, new SimpleOption.ValidatingIntSliderCallbacks(cb.minInclusive(), bmOption));
+		boolean enabled = ConfigHandler.getInstance().isEnabledOrPending();
 
-		// Modify the text getter to show Borderless Mining text
-		SimpleOption.ValueTextGetter<Integer> oldTextGetter = args.get(2);
-		args.set(2, (SimpleOption.ValueTextGetter<Integer>) (optionText, value) -> {
-			if (value == bmOption) {
-				return Text.translatable("text.borderlessmining.videomodename");
+		SimpleOption<Boolean> borderlessOption = SimpleOption.ofBoolean(
+			"text.borderlessmining.videomodename",
+			enabled,
+			(value) -> {
+				ConfigHandler.getInstance().setEnabledPending(value);
+				if (value) {
+					this.fullscreen.setValue(false);
+				}
 			}
-			return oldTextGetter.toString(optionText, value);
-		});
+		);
 
-		// Change the default based on the existing option selection
-		args.set(4, ConfigHandler.getInstance().isEnabledOrPending() ? bmOption : args.get(4));
-
-		// Update BM settings when the slider is changed
-		Consumer<Integer> oldConsumer = args.get(5);
-		args.set(5, (Consumer<Integer>) value -> {
-			if (value == bmOption) {
-				ConfigHandler.getInstance().setEnabledPending(true);
-				// Set the actual value to "Current"
-				oldConsumer.accept(-1);
-			} else {
-				ConfigHandler.getInstance().setEnabledPending(false);
-				oldConsumer.accept(value);
-			}
-		});
+		// Add the option widget directly since addSingleOptionRow is not available
+		this.addDrawableChild(borderlessOption.createWidget(this.client.options, this.width / 2 - 155, this.height - 27, 310));
 	}
 }

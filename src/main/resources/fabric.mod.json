@@ -3,15 +3,15 @@
   "id": "borderlessmining",
   "version": "${version}",
 
-  "name": "Borderless Mining",
-  "description": "Adds a windowed borderless (fullscreen) option",
+  "name": "BorderlessFork",
+  "description": "A fork that adds a windowed borderless (fullscreen) option",
   "authors": [
     "comp500"
   ],
   "contact": {
-    "homepage": "https://github.com/comp500/BorderlessMining",
-    "sources": "https://github.com/comp500/BorderlessMining",
-    "issues": "https://github.com/comp500/BorderlessMining/issues"
+    "homepage": "https://github.com/Horrifi0/BorderlessFork",
+    "sources": "https://github.com/Horrifi0/BorderlessFork",
+    "issues": "https://github.com/Horrifi0/BorderlessFork/issues"
   },
 
   "license": "MIT",
@@ -32,8 +32,8 @@
   "accessWidener": "borderlessmining.accesswidener",
 
   "depends": {
-    "fabricloader": ">=0.7.2",
-    "fabric-resource-loader-v0": "*",
-    "minecraft": "~1.20.2"
+    "fabricloader": "*",
+    "fabric-api": "*",
+    "minecraft": ">=1.21.5 <=1.21.8"
   }
 }

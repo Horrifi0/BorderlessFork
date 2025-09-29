@@ -52,14 +52,14 @@ public abstract class ConfigScreen extends Screen {
 		@Override
 		public int addEntry(ConfigListEntry entry) {
 			return super.addEntry(entry);
-		}
-
+		}		
+		@Override
 		public int getRowWidth() {
 			return 400;
 		}
 
-		protected int getScrollbarPositionX() {
-			return super.getScrollbarPositionX() + 32;
+		protected int getScrollbarX() {
+			return super.getScrollbarX() + 32;
 		}
 
 		public Style getHoveredStyle(int mouseX, int mouseY) {
@@ -121,7 +121,7 @@ public abstract class ConfigScreen extends Screen {
 
 	@Override
 	public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-		this.renderBackgroundTexture(context);
+		super.renderBackground(context, mouseX, mouseY, delta);
 	}
 
 	public abstract void addElements();
